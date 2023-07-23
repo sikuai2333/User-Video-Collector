@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:34
 LastEditors: sikuai
-LastEditTime: 2023-07-23 15:14:54
+LastEditTime: 2023-07-31 07:30:59
 '''
 # 接收请求
 
@@ -23,6 +23,7 @@ import re
 import redis
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 CORS(app, supports_credentials=True)
 
 @app.route('/api/<name>')
@@ -97,11 +98,10 @@ def collect_videos():
     return jsonify({'code': 400, 'message': 'uid长度错误'})
 
 #用户关注-采集
-@app.route('/collect_follows') 
-def collect_follows():
+@app.route('/collect_following') 
+def collect_following():
     # 获取uid参数
     uid = request.values.get('uid')
-    sessdata = request.values.get('sessdata')
     # 参数校验
     if not uid:
         return jsonify({'code': 500, 'message': '未接受到uid'})
@@ -111,9 +111,9 @@ def collect_follows():
         return jsonify({'code': 500, 'message': 'uid非数字'})
     uid = str(match.group())
     # 范围校验
-    if 5 < len(uid) < 30 and sessdata != "":
+    if 5 < len(uid) < 30 :
         # 参数验证成功,构造任务数据
-        task = {'sessdata':sessdata,'uid': uid, 'type': 'follows'} 
+        task = {'uid': uid, 'type': 'following'} 
         # 写入采集队列（此处是rpush，lpop右存左取）
         redis_client.rpush('collect_tasks', task)
         # 返回结果
@@ -144,9 +144,9 @@ def search_user():
             return jsonify({'code': 200, 'message': result[4]})
     return jsonify({'code': 400, 'message': 'uid长度错误'})
 
-#user关注列表-搜索，传入UID作为参数
-@app.route('/search_follows') 
-def search_follows():
+# user投稿-搜索，传入UID作为参数
+@app.route('/search_videos')
+def search_videos():
     # 获取uid参数
     uid = request.values.get('uid')
     # 参数校验
@@ -159,7 +159,29 @@ def search_follows():
     uid = str(match.group())
     # 范围校验
     if 5 < len(uid) < 30:
-        result = data_storage.select_data_follows( uid)
+        result = data_storage.select_data_videos(uid)
+        print(result)
+        if result == None:
+            return jsonify({'code': 503, 'message': '查询不到信息'})
+        else:
+            # 返回结果
+            return jsonify({'code': 200, 'message': result[1]})
+#user关注列表-搜索，传入UID作为参数
+@app.route('/search_follows') 
+def search_following():
+    # 获取uid参数
+    uid = request.values.get('uid')
+    # 参数校验
+    if not uid:
+        return jsonify({'code': 500, 'message': '未接受到uid'})
+    # 提取uid中的数字
+    match = re.search(r'\d+', uid)
+    if not match:
+        return jsonify({'code': 500, 'message': 'uid非数字'})
+    uid = str(match.group())
+    # 范围校验
+    if 5 < len(uid) < 30:
+        result = data_storage.select_data_following(uid)
         print(result)
         if result == None:
             return jsonify({'code': 503, 'message': '查询不到信息'})

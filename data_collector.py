@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:43
 LastEditors: sikuai
-LastEditTime: 2023-07-23 14:49:00
+LastEditTime: 2023-07-31 07:32:13
 '''
 # 请求API采集数据
 
@@ -35,7 +35,7 @@ def collect_user_data(uid):
         'Host': 'api.bilibili.com',
         'Connection': 'keep-alive'
         }
-        res = requests.get(url=url_full,headers=headers,verify=False).text
+        res = requests.get(url=url_full,headers=headers,verify=False).content.decode('unicode-escape')
         # print(res)
         # with open("collect_user_data.txt","w",encoding="utf-8")as f:
         #     f.write(res)
@@ -82,7 +82,7 @@ def collect_user_videos(uid):
         'Refer':'https://space.bilibili.com/1871207387/video',
         'Accept':'application/json, text/plain, */*'
         }
-        res = requests.get(url=url_full,headers=headers,verify=False).text
+        res = requests.get(url=url_full,headers=headers,verify=False).content.decode('unicode-escape')
         # print(res)
         # with open("collect_user_data.txt","w",encoding="utf-8")as f:
         #     f.write(res)
@@ -109,51 +109,44 @@ def collect_user_videos(uid):
     except Exception as e:
         # 捕获到异常后,打印异常信息
         print('发生异常:', e)
-# 用户关注列表
-def collect_user_follows(uid,sessdata):
-    print("用户关注采集任务，UID="+str(uid),"sessdata值为"+str(sessdata))
-    # time.sleep(10)
+# 用户粉丝关注采集
+def collect_fans(uid):
+    print("用户粉丝采集任务，UID="+str(uid))
+    time.sleep(10)
     try:
         headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82',
         'Host': 'api.bilibili.com',
         'Connection': 'keep-alive',
         'Cookie':'SESSDATA='+str(sessdata),
-        'Refer':'https://space.bilibili.com/1871207387/video',
+        'Refer':'https://space.bilibili.com/',
         'Accept':'application/json, text/plain, */*'
         }
         pn = 1
-        url = "https://api.bilibili.com/x/relation/followings?vmid="+str(uid)+"&pn="+str(pn)+"&ps=50"
+        url = "https://api.bilibili.com/x/relation/stat?vmid="+str(uid)
         print(url)
         res = requests.get(url=url,headers=headers).json()
-        #解析json存入数据库，此处直接解析可能会有问题，如果接口因频率过快会取不到key直接报错
-        code = res["code"]
-        first_list = res["data"]["list"][0]
-        if code == int(0):
-            total = res["data"]["total"]
-            page = (total//50)+1
-            print("总页数:"+str(page))
-            full_list = []
-            full_list.append(first_list)
-            for pn in range(2,page+1):
-                url = "https://api.bilibili.com/x/relation/followings?vmid="+str(uid)+"&pn="+str(pn)+"&ps=50"
-                res = requests.get(url=url,headers=headers).json()
-                print(pn)
-                # time.sleep(3)
-                lists = res["data"]["list"]
-                for list in lists:
-                    full_list.append(list)
-            # 拼接list然后存入
+        code = json.loads(res)["code"]
+        if code != int(0):
+            print("用户主页采集接口错误")
+            return("用户主页采集接口错误")
+        else:
+            #解析json存入数据库，此处直接解析可能会有问题，如果接口因频率过快会取不到key直接报错
+            uid = res["data"]["mid"]
+            # 获取关注的up主
+            following = res["data"]["following"]
+            # 获取粉丝数
+            follower = res["data"]["follower"]
             timestamp = str(str(time.time()).split(".")[0])
-            full = json.dumps(full_list)
-            result = data_storage.replace_data_follows(uid, full, timestamp)
-            print("成功影响行数："+str(result))
-            return("用户投稿采集成功")
-
+            result = data_storage.select_data_following(uid, following, follower, timestamp)
+            print("成功影响行数：" + str(result))
+            return("用户粉丝采集成功")
     except Exception as e:
         # 捕获到异常后,打印异常信息
         print('发生异常:', e)
-    
+
+
+
 while True:
     # 获取任务队列（此处是rpush，lpop右存左取）
     task = redis_client.lpop('collect_tasks')
@@ -174,10 +167,10 @@ while True:
             uid = task['uid']
             result = collect_user_videos(uid)        
         # 采集用户关注
-        if type == 'follows':
+        if type == 'following':
             sessdata = task['sessdata']
             uid = task['uid']
-            result = collect_user_follows(uid,sessdata)
+            result = collect_fans(uid)
         # 将结果写入结果队列  -任务提交到采集队列后,会异步地被采集函数消费。如果直接return,则会同步等待采集完成,效率低。
         redis_client.lpush('collect_results', result)
     else:

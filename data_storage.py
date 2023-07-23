@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:56
 LastEditors: sikuai
-LastEditTime: 2023-07-23 15:11:04
+LastEditTime: 2023-07-31 07:29:35
 '''
 # 调用数据库增删改查数据
 
@@ -12,7 +12,7 @@ import pymysql
 import time
 
 # 数据库连接
-conn = pymysql.connect(host='192.168.1.6', user='bilibili',
+conn = pymysql.connect(host='192.168.1.66', user='bilibili',
                        password='304ab5ce4243ab9b', db='test')
 cursor = conn.cursor()
 
@@ -36,20 +36,19 @@ def get_conn():
 # def create_table():
 #   cursor.execute("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))")
 
-# 插入数据
-
-def insert_data(db, name):
-    get_conn()
-    insert_sql = "INSERT INTO %s (name) VALUES (%s)"
-    cursor.execute(insert_sql, [name])
-    result = cursor.fetchone()
-    return (result)
-
 # 查询uid数据
 
 def select_data_uid(uid):
     get_conn()
     select_sql = "SELECT * FROM user_info WHERE uid = %s"
+    cursor.execute(select_sql, [uid])
+    result = cursor.fetchone()
+    return (result)
+
+# 查询投稿数据
+def select_data_videos(uid):
+    get_conn()
+    select_sql = "SELECT * FROM user_post WHERE uid = %s"
     cursor.execute(select_sql, [uid])
     result = cursor.fetchone()
     return (result)
@@ -65,11 +64,11 @@ def select_data_ip(ip):
     print("查询结果为"+str(result))
     return (result)
 
-# 查询follows数据
+# 查询following数据
 
-def select_data_follows(uid):
+def select_data_following(uid):
     get_conn()
-    select_sql = "SELECT * FROM user_follows WHERE uid = %s"
+    select_sql = "SELECT * FROM user_following WHERE uid = %s"
     cursor.execute(select_sql, [uid])
     result = cursor.fetchone()
     return (result)
@@ -112,7 +111,7 @@ def replace_data_user(db, uid, name, sex, sign, full, timestamp):
     # finally:
     #     conn.close()
 
-# 更新或插入用户主页数据
+# 更新或插入用户投稿数据
 def replace_data_videos(db, uid, full, timestamp):
     # 执行SQL
     sql = "REPLACE INTO "+str(db)+" (uid, full, timestamp) VALUES (%s, %s, %s)"
@@ -134,9 +133,9 @@ def replace_data_videos(db, uid, full, timestamp):
     #     conn.close()
 
 # 更新用户关注数据
-def replace_data_follows(uid,full,timestamp):
+def replace_data_following(uid,full,timestamp):
     # 执行SQL
-    sql = "REPLACE INTO user_follows (uid, full, timestamp) VALUES (%s, %s, %s)"
+    sql = "REPLACE INTO user_following (uid, full, timestamp) VALUES (%s, %s, %s)"
     try:
         cursor = conn.cursor()
         cursor.execute(sql, (uid, full, timestamp))  
