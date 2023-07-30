@@ -12,7 +12,7 @@ import pymysql
 import time
 
 # 数据库连接
-conn = pymysql.connect(host='192.168.1.6', user='bilibili',
+conn = pymysql.connect(host='192.168.1.66', user='bilibili',
                        password='304ab5ce4243ab9b', db='test')
 cursor = conn.cursor()
 
@@ -26,7 +26,7 @@ def get_conn():
         except Exception as e:
             print('发生异常:', e)
     try:
-        conn = pymysql.Connect(host='192.168.1.6', user='bilibili', password='304ab5ce4243ab9b', db='test', port=3306, charset='utf8mb4', )
+        conn = pymysql.Connect(host='192.168.1.66', user='bilibili', password='304ab5ce4243ab9b', db='test', port=3306, charset='utf8mb4', )
         return conn
     except Exception as e:
         print('发生异常:', e)

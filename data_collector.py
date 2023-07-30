@@ -15,7 +15,7 @@ import time
 import requests
 import json
 
-redis_client = redis.Redis(host='192.168.1.6', port=6379)
+redis_client = redis.Redis(host='192.168.1.66', port=6379)
 # 用户主页数据
 def collect_user_data(uid):
     print("用户主页采集任务，UID="+str(uid))

@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:34
 LastEditors: sikuai
-LastEditTime: 2023-07-23 15:14:54
+LastEditTime: 2023-07-31 07:48:28
 '''
 # 接收请求
 
@@ -196,6 +196,6 @@ def check_data(headers,data):
 
 if __name__ == '__main__':
     # 创建Redis连接
-    redis_client = redis.Redis(host='192.168.1.6', port=6379)
+    redis_client = redis.Redis(host='192.168.1.66', port=6379)
     # flask启动
     app.run(debug=True, port=5000, host="0.0.0.0")
