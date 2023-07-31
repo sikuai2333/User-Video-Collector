@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:34
 LastEditors: sikuai
-LastEditTime: 2023-07-31 07:50:20
+LastEditTime: 2023-07-31 07:53:23
 '''
 # 接收请求
 
@@ -189,15 +189,14 @@ def search_following():
             # 返回结果
             return jsonify({'code': 200, 'message': result[1]})
     return jsonify({'code': 400, 'message': 'uid长度错误'})
-
+# 存储IP黑名单
 def ban_ip(ip,ua,url):
     print(ip)
     print(ua)
     print(url)
     timestamp = str(str(time.time()).split(".")[0])
     data_storage.replace_data_ip(ip,url,ua,timestamp)
-
-
+# 获取IP黑名单
 def black_ip_list(ip):
     result = data_storage.select_data_ip(ip)
     print(result)

@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:56
 LastEditors: sikuai
-LastEditTime: 2023-07-31 07:29:35
+LastEditTime: 2023-07-31 07:59:10
 '''
 # 调用数据库增删改查数据
 
@@ -73,14 +73,6 @@ def select_data_following(uid):
     result = cursor.fetchone()
     return (result)
 
-# 更新数据
-
-def update_data(db, name, uid):
-    update_sql = "UPDATE %s SET name = %s WHERE uid = %s"
-    cursor.execute(update_sql, [name, uid])
-    result = cursor.fetchone()
-    return (result)
-
 # 删除数据
 
 def delete_data(db, uid):
@@ -133,12 +125,12 @@ def replace_data_videos(db, uid, full, timestamp):
     #     conn.close()
 
 # 更新用户关注数据
-def replace_data_following(uid,full,timestamp):
+def replace_data_following(uid, following, follower, timestamp):
     # 执行SQL
-    sql = "REPLACE INTO user_following (uid, full, timestamp) VALUES (%s, %s, %s)"
+    sql = "REPLACE INTO user_following (uid, following, follower, timestamp) VALUES (%s,%s, %s, %s)"
     try:
         cursor = conn.cursor()
-        cursor.execute(sql, (uid, full, timestamp))  
+        cursor.execute(sql, [uid, following, follower, timestamp])  
         rowcount = cursor.rowcount
         conn.commit()
         cursor.close()

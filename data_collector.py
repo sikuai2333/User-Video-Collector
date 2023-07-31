@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:43
 LastEditors: sikuai
-LastEditTime: 2023-07-31 07:32:13
+LastEditTime: 2023-07-31 08:41:03
 '''
 # 请求API采集数据
 
@@ -118,18 +118,18 @@ def collect_fans(uid):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82',
         'Host': 'api.bilibili.com',
         'Connection': 'keep-alive',
-        'Cookie':'SESSDATA='+str(sessdata),
         'Refer':'https://space.bilibili.com/',
-        'Accept':'application/json, text/plain, */*'
+        'Accept':'application/json,'
         }
-        pn = 1
         url = "https://api.bilibili.com/x/relation/stat?vmid="+str(uid)
         print(url)
-        res = requests.get(url=url,headers=headers).json()
-        code = json.loads(res)["code"]
+        res = requests.get(url=url,headers=headers).text
+        print(res)
+        res = json.loads(res)
+        code = res["code"]
         if code != int(0):
-            print("用户主页采集接口错误")
-            return("用户主页采集接口错误")
+            print("用户粉丝采集任务")
+            return("用户粉丝采集任务")
         else:
             #解析json存入数据库，此处直接解析可能会有问题，如果接口因频率过快会取不到key直接报错
             uid = res["data"]["mid"]
@@ -138,7 +138,7 @@ def collect_fans(uid):
             # 获取粉丝数
             follower = res["data"]["follower"]
             timestamp = str(str(time.time()).split(".")[0])
-            result = data_storage.select_data_following(uid, following, follower, timestamp)
+            result = data_storage.replace_data_following(uid, following, follower, timestamp)
             print("成功影响行数：" + str(result))
             return("用户粉丝采集成功")
     except Exception as e:
@@ -168,7 +168,6 @@ while True:
             result = collect_user_videos(uid)        
         # 采集用户关注
         if type == 'following':
-            sessdata = task['sessdata']
             uid = task['uid']
             result = collect_fans(uid)
         # 将结果写入结果队列  -任务提交到采集队列后,会异步地被采集函数消费。如果直接return,则会同步等待采集完成,效率低。
