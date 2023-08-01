@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:34
 LastEditors: sikuai
-LastEditTime: 2023-07-31 07:53:23
+LastEditTime: 2023-08-01 13:50:12
 '''
 # 接收请求
 
@@ -120,6 +120,46 @@ def collect_following():
         return jsonify({'code': 200, 'message': '用户关注采集任务已提交'})
     return jsonify({'code': 400, 'message': 'uid长度错误或sessdata为空'})
 
+# 视频基础信息-采集，传入aid或者bvid
+@app.route('/video_info')
+def video_info():
+    # 获取vid参数
+    vid = request.values.get('vid')
+    # 参数校验，使用正则匹配是否为字母或数字
+    if not vid:
+        return jsonify({'code': 500, 'message': '未接受到vid'})
+    match = re.search(r'[a-zA-Z0-9]+', vid)
+    if not match:
+        return jsonify({'code': 500, 'message': 'vid非数字或字母'})
+    vid = str(match.group())
+    # 不需要范围校验
+    # 构造任务数据
+    task = {'vid': vid, 'type': 'video_info'}
+    # 写入采集队列（此处是rpush，lpop右存左取）
+    redis_client.rpush('collect_tasks', task)
+    # 返回结果
+    return jsonify({'code': 200, 'message': '视频基础信息采集任务已提交'})
+
+# 视频基础信息-搜索
+@app.route('/search_video')
+def search_video():
+    # 获取vid参数
+    vid = request.values.get('vid')
+    # 参数校验，使用正则匹配是否为字母或数字
+    if not vid:
+        return jsonify({'code': 500, 'message': '未接受到vid'})
+    match = re.search(r'[a-zA-Z0-9]+', vid)
+    if not match:
+        return jsonify({'code': 500, 'message': 'vid非数字或字母'})
+    result = data_storage.select_data_video(vid)
+    print(result)
+    if result == None:
+        return jsonify({'code': 503, 'message': '查询不到信息'})
+    else:
+        # 返回结果
+        return jsonify({'code': 200, 'message': result[1]})
+
+
 #user主页-搜索，传入UID作为参数
 @app.route('/search_user') 
 def search_user():
@@ -166,7 +206,7 @@ def search_videos():
         else:
             # 返回结果
             return jsonify({'code': 200, 'message': result[1]})
-#user关注列表-搜索，传入UID作为参数
+# user关注列表-搜索，传入UID作为参数
 @app.route('/search_follows') 
 def search_following():
     # 获取uid参数
@@ -189,6 +229,8 @@ def search_following():
             # 返回结果
             return jsonify({'code': 200, 'message': result[1]})
     return jsonify({'code': 400, 'message': 'uid长度错误'})
+
+
 # 存储IP黑名单
 def ban_ip(ip,ua,url):
     print(ip)

@@ -4,7 +4,7 @@ version: 39
 Author: sikuai
 Date: 2023-07-17 22:44:43
 LastEditors: sikuai
-LastEditTime: 2023-07-31 08:41:03
+LastEditTime: 2023-08-01 13:55:40
 '''
 # 请求API采集数据
 
@@ -145,7 +145,9 @@ def collect_fans(uid):
         # 捕获到异常后,打印异常信息
         print('发生异常:', e)
 
-
+# 视频基本信息采集
+def collect_data_video(vid):
+    pass
 
 while True:
     # 获取任务队列（此处是rpush，lpop右存左取）
@@ -170,6 +172,9 @@ while True:
         if type == 'following':
             uid = task['uid']
             result = collect_fans(uid)
+        if type == 'video_info':
+            vid = task['vid']
+            result = collect_data_video(vid)
         # 将结果写入结果队列  -任务提交到采集队列后,会异步地被采集函数消费。如果直接return,则会同步等待采集完成,效率低。
         redis_client.lpush('collect_results', result)
     else:
